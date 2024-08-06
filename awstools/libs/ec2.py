@@ -27,6 +27,9 @@ def start(instance_id, obj=None):
 
 
 def force_restart_instance_status(instance_id):
+    """
+    https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/describe_instance_status.html
+    """
     client = boto3.client("ec2")
     response = client.describe_instance_status(
         InstanceIds=[instance_id],
@@ -37,12 +40,12 @@ def force_restart_instance_status(instance_id):
 
     instance_status = status[0]["InstanceStatus"]
     if instance_status["Status"] != "ok":
+        logger.error("force_restart_instance_status: " + str(instance_status))
         resource = boto3.resource("ec2")
         instance = resource.Instance(instance_id)
-        logger.error("force_restart_instance_status: " + str(instance_status))
-        stop(instance_id, force=True)
+        instance.stop(force=True)
         instance.wait_until_stopped()
-        start(instance_id)
+        instance.start()
 
 
 def restart(instance_id, obj=None, force=False, dry_run=False):
