@@ -26,6 +26,25 @@ def start(instance_id, obj=None):
     instance.start()
 
 
+def force_restart_instance_status(instance_id):
+    client = boto3.client("ec2")
+    response = client.describe_instance_status(
+        InstanceIds=[instance_id],
+    )
+    status = response["InstanceStatuses"]
+    if len(status) != 1:
+        return False
+
+    instance_status = status[0]["InstanceStatus"]
+    if instance_status["Status"] != "ok":
+        resource = boto3.resource("ec2")
+        instance = resource.Instance(instance_id)
+        logger.error("force_restart_instance_status: " + str(instance_status))
+        stop(instance_id, force=True)
+        instance.wait_until_stopped()
+        start(instance_id)
+
+
 def restart(instance_id, obj=None, force=False, dry_run=False):
     """
     state:
@@ -42,6 +61,8 @@ def restart(instance_id, obj=None, force=False, dry_run=False):
         if state["Code"] == 16:  # running
             message = f"{instance_id} is running: do nothing"
             logger.info(message)
+            if force_restart_instance_status(instance_id):
+                message = f"{instance_id} was forced to restart"
             return dict(id=instance_id, state=state["Code"], message=message)
 
         if state["Code"] == 48:  # terminated
@@ -80,9 +101,5 @@ def get_instances_tags(tags):
 
 def restart_instances_all(instances, force=False, dry_run=False):
     """再起動"""
-    instances = chain.from_iterable(
-        map(lambda i: i["Instances"], instances["Reservations"])
-    )
-    return list(
-        map(lambda i: restart(i["InstanceId"], force=force, dry_run=dry_run), instances)
-    )
+    instances = chain.from_iterable(map(lambda i: i["Instances"], instances["Reservations"]))
+    return list(map(lambda i: restart(i["InstanceId"], force=force, dry_run=dry_run), instances))
