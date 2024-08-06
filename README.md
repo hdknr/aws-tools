@@ -5,7 +5,7 @@
 ### ローカルコマンド実行
 
 ```bash
-docker compose run --rm tool bin/app.py ec2 hello test
+docker compose --env-file .env.test run --rm local bin/app.py ec2 --help
 ```
 
 ### lambda ローカルテスト
@@ -21,7 +21,7 @@ docker compose up  lambda -d
 ```
 
 ```bash
-curl "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"args": ["ec2", "hello", "test"]}'
+curl "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"args": ["ec2", "restart-instances", "deploy=devel"]}'
 ```
 
 ## ruff
