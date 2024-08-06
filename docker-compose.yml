@@ -1,0 +1,20 @@
+services:
+  local:
+    container_name: awstools_local
+    image: awstools_local
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        BASE: /home/tool
+    working_dir: /home/tool
+    volumes:
+      - .:/home/tool
+  lambda:
+    container_name: awstools_lambda
+    image: awstools_lambda
+    build:
+      context: .
+      dockerfile: ./lambda/Dockerfile
+    ports:
+      - 9000:8080
