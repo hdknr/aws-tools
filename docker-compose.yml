@@ -10,6 +10,11 @@ services:
     working_dir: /home/tool
     volumes:
       - .:/home/tool
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+
   lambda:
     container_name: awstools_lambda
     image: awstools_lambda
