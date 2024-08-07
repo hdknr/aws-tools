@@ -1,3 +1,16 @@
+"""
+
+Required actions:
+
+"Action": [
+	"ec2:DescribeInstanceStatus",
+	"ec2:DescribeInstances",
+	"ec2:StartInstances",
+	"ec2:StopInstances"
+]
+
+"""
+
 import click
 
 from logging import getLogger
