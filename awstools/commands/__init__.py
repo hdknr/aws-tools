@@ -6,6 +6,7 @@ from logging import getLogger
 from .ec2 import ec2
 from .rds import rds
 from .ecs import ecs
+from .cloudfront import cloudfront
 
 
 logger = getLogger()
@@ -33,3 +34,4 @@ def main(ctx, tf_output):
 main.add_command(ec2)
 main.add_command(rds)
 main.add_command(ecs)
+main.add_command(cloudfront)
