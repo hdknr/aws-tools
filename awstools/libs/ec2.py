@@ -13,7 +13,11 @@ def stop(instance_id, obj=None, force=False):
     """
     resource = boto3.resource("ec2")
     instance = obj or resource.Instance(instance_id)
-    instance.stop(Force=force)
+
+    try:
+        instance.stop(Force=force)
+    except Exception as e:
+        logger.error(f"ec2 stop {e}")
 
 
 def start(instance_id, obj=None):
@@ -23,7 +27,10 @@ def start(instance_id, obj=None):
     """
     resource = boto3.resource("ec2")
     instance = obj or resource.Instance(instance_id)
-    instance.start()
+    try:
+        instance.start()
+    except Exception as e:
+        logger.error(f"ec2 start {e}")
 
 
 def force_restart_instance_status(instance_id):
@@ -116,5 +123,9 @@ def get_ids_from_response(response):
 
 def restart_instances_all(response, force=False, dry_run=False):
     """再起動"""
-    instances = chain.from_iterable(map(lambda i: i["Instances"], response["Reservations"]))
-    return list(map(lambda i: restart(i["InstanceId"], force=force, dry_run=dry_run), instances))
+    instances = chain.from_iterable(
+        map(lambda i: i["Instances"], response["Reservations"])
+    )
+    return list(
+        map(lambda i: restart(i["InstanceId"], force=force, dry_run=dry_run), instances)
+    )

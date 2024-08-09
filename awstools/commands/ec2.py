@@ -43,3 +43,23 @@ def restart_instances(ctx, items):
 
     ids = get_id_from_items(items)
     list(map(ec2_lib.restart, ids))
+
+
+@ec2.command()
+@click.argument("items", nargs=-1)
+@click.pass_context
+def start_instances(ctx, items):
+    """ID/タグで指定されたインスタンスを起動する"""
+
+    ids = get_id_from_items(items)
+    list(map(ec2_lib.start, ids))
+
+
+@ec2.command()
+@click.argument("items", nargs=-1)
+@click.pass_context
+def stop_instances(ctx, items):
+    """ID/タグで指定されたインスタンスを停止する"""
+
+    ids = get_id_from_items(items)
+    list(map(ec2_lib.stop, ids))
