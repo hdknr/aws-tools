@@ -123,9 +123,5 @@ def get_ids_from_response(response):
 
 def restart_instances_all(response, force=False, dry_run=False):
     """再起動"""
-    instances = chain.from_iterable(
-        map(lambda i: i["Instances"], response["Reservations"])
-    )
-    return list(
-        map(lambda i: restart(i["InstanceId"], force=force, dry_run=dry_run), instances)
-    )
+    instances = chain.from_iterable(map(lambda i: i["Instances"], response["Reservations"]))
+    return list(map(lambda i: restart(i["InstanceId"], force=force, dry_run=dry_run), instances))
