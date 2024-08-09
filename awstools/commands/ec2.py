@@ -26,9 +26,13 @@ def ec2(ctx):
 
 
 @ec2.command()
-@click.argument("tags", nargs=-1)
+@click.argument("items", nargs=-1)
 @click.pass_context
-def restart_instances(ctx, tags):
-    """タグで指定されたインスタンスを再起動する"""
-    instances = ec2_lib.get_instances_tags(tags)
-    ec2_lib.restart_instances_all(instances)
+def restart_instances(ctx, items):
+    """ID/タグで指定されたインスタンスを再起動する"""
+    tags = [i for i in items if i.find("=") > 0]
+    if tags:
+        instances = ec2_lib.get_instances_tags(tags)
+        ec2_lib.restart_instances_all(instances)
+    ids = [i for i in items if i.startswith("i-")]
+    list(map(ec2_lib.restart, ids))
