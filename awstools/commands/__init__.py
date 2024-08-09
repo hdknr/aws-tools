@@ -4,6 +4,7 @@ import boto3
 import click
 from logging import getLogger
 from .ec2 import ec2
+from .rds import rds
 
 
 logger = getLogger()
@@ -29,3 +30,4 @@ def main(ctx, tf_output):
 
 
 main.add_command(ec2)
+main.add_command(rds)
