@@ -102,11 +102,19 @@ def get_instances_tags(tags):
     return res
 
 
-def restart_instances_all(instances, force=False, dry_run=False):
+def get_instances_from_response(response):
+    return chain.from_iterable(map(lambda i: i["Instances"], response["Reservations"]))
+
+
+def get_ids_from_instances(instances):
+    return list(map(lambda i: i["InstanceId"], instances))
+
+
+def get_ids_from_response(response):
+    return get_ids_from_instances(get_instances_from_response(response))
+
+
+def restart_instances_all(response, force=False, dry_run=False):
     """再起動"""
-    instances = chain.from_iterable(
-        map(lambda i: i["Instances"], instances["Reservations"])
-    )
-    return list(
-        map(lambda i: restart(i["InstanceId"], force=force, dry_run=dry_run), instances)
-    )
+    instances = chain.from_iterable(map(lambda i: i["Instances"], response["Reservations"]))
+    return list(map(lambda i: restart(i["InstanceId"], force=force, dry_run=dry_run), instances))

@@ -3,10 +3,10 @@
 Required actions:
 
 "Action": [
-	"ec2:DescribeInstanceStatus",
-	"ec2:DescribeInstances",
-	"ec2:StartInstances",
-	"ec2:StopInstances"
+        "ec2:DescribeInstanceStatus",
+        "ec2:DescribeInstances",
+        "ec2:StartInstances",
+        "ec2:StopInstances"
 ]
 
 """
@@ -30,9 +30,12 @@ def ec2(ctx):
 @click.pass_context
 def restart_instances(ctx, items):
     """ID/タグで指定されたインスタンスを再起動する"""
+    ids = [i for i in items if i.startswith("i-")]
     tags = [i for i in items if i.find("=") > 0]
+
     if tags:
-        instances = ec2_lib.get_instances_tags(tags)
-        ec2_lib.restart_instances_all(instances)
+        response = ec2_lib.get_instances_tags(tags)
+        ids = ids + ec2_lib.get_ids_from_response(response)
+
     ids = [i for i in items if i.startswith("i-")]
     list(map(ec2_lib.restart, ids))
