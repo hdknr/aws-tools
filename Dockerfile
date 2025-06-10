@@ -40,5 +40,5 @@ COPY awstools/ ${BASE}/awstools/
 #
 RUN pip install --upgrade pip poetry
 RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev
+RUN poetry install --without dev
 

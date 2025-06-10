@@ -16,6 +16,6 @@ COPY lambda/handler.py ${LAMBDA_TASK_ROOT}
 COPY pyproject.toml poetry.lock README.md ${LAMBDA_TASK_ROOT}/
 COPY awstools/ ${LAMBDA_TASK_ROOT}/awstools/
 #
-RUN poetry install  --no-dev
+RUN poetry install  --without dev
 
 CMD ["handler.lambda_handler"]
