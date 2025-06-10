@@ -39,3 +39,12 @@ def set_desired_count(ctx, items):
     params = filter(lambda i: i is not None, map(get_params_from_item, items))
     for param in params:
         ecs_lib.update_desired_count(*param)
+
+
+@ecs.command()
+@click.argument("items", nargs=-1)
+@click.pass_context
+def describe_clusters(ctx, items):
+    """ECSのクラスタを取得"""
+    res = ecs_lib.get_client().describe_clusters(clusters=items)
+    print(res)
