@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import os
-import boto3
 import click
 from logging import getLogger
 from .ec2 import ec2
