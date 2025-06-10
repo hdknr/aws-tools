@@ -48,3 +48,5 @@ RUN ls -la
 # python setup
 RUN uv pip install --system -e .
 RUN uv sync --python-preference only-system
+
+CMD ["sleep", "infinity"]
