@@ -6,14 +6,19 @@ WORKDIR ${BASE}
 
 # Debian
 RUN apt-get update && \
-    apt-get -y install locales less && \
+    apt-get -y install locales less tar && \
     localedef -f UTF-8 -i ja_JP ja_JP.UTF-8
 
 ENV LANG=ja_JP.UTF-8  \
     LANGUAGE=ja_JP:ja \
     LC_ALL=ja_JP.UTF-8 \
     TZ=JST-9 \
-    TERM=xterm
+    TERM=xterm \
+    # UV
+    UV_COMPILE_BYTCODE=1 \
+    UV_CAHE_DIR=/root/.cache/uv \
+    UV_LINK_MODE=copy \ 
+    PATH="/root/.local/bin/:$PATH"
 
 # TOFU
 # https://opentofu.org/docs/intro/install/deb/
@@ -33,12 +38,13 @@ RUN unzip \
     && unzip awscliv2.zip \
     && ./aws/install -i /usr/local/aws-cli -b /usr/bin
 
+# UV
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+COPY pyproject.toml uv.lock README.md ./
+COPY src ./src
+RUN ls -la
 
-# Poetry
-COPY pyproject.toml poetry.lock README.md ${BASE}/
-COPY awstools/ ${BASE}/awstools/
-#
-RUN pip install --upgrade pip poetry
-RUN poetry config virtualenvs.create false
-RUN poetry install --without dev
-
+# python setup
+RUN uv pip install --system -e .
+RUN uv sync --python-preference only-system
