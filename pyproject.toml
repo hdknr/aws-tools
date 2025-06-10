@@ -13,9 +13,8 @@ dependencies = [
 [dependency-groups]
 dev = ["ruff>=0.5.6,<0.6"]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 exclude = [
@@ -30,7 +29,6 @@ exclude = [
     "venv",
     "env",
 ]
-src = ["es"]
 
 line-length = 120
 indent-width = 4
