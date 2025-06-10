@@ -76,13 +76,14 @@ def list_streams(ctx, log_group_name, stream_count):
 @cwl.command()
 @click.argument("log_group_name")
 @click.argument("log_stream_name")
+@click.option("--out", "-o", default=None)
 @click.pass_context
-def fetch_streams(ctx, log_group_name, log_stream_name):
+def fetch_streams(ctx, log_group_name, log_stream_name, out):
     """ストリームダウンロード"""
-
+    out = out or "/tmp/event.csv"
     events = cwl_lib.fech_stream_events(log_group_name, log_stream_name)
 
     df = pd.DataFrame(events)
     for i in ["timestamp", "ingestionTime"]:
         df[i] = pd.to_datetime(df[i], unit="ms", errors="coerce").dt.tz_localize("UTC").dt.tz_convert("Asia/Tokyo")
-    df.to_csv("/tmp/event.csv", index=False)
+    df.to_csv(out, index=False)
