@@ -7,6 +7,7 @@ import pandas as pd
 
 from logging import getLogger
 from ..libs import cwl as cwl_lib
+from datetime import datetime
 
 logger = getLogger()
 
@@ -40,8 +41,9 @@ def list_groups(ctx, prefix):
 @cwl.command()
 @click.argument("log_group_name")
 @click.option("--stream_count", "-c", default=10)
+@click.option("--today", "-t", is_flag=True)
 @click.pass_context
-def list_streams(ctx, log_group_name, stream_count):
+def list_streams(ctx, log_group_name, stream_count, today):
     """ストリーム一覧"""
     client = cwl_lib.get_client()
 
@@ -70,6 +72,8 @@ def list_streams(ctx, log_group_name, stream_count):
         .dt.tz_localize("UTC")
         .dt.tz_convert("Asia/Tokyo")
     )
+    if today:
+        df = df[df["lastEventTimestamp"].dt.date == datetime.now().date()]
     print(df[["logStreamName", "lastEventTimestamp"]].to_csv(index=False))
 
 
@@ -85,5 +89,9 @@ def fetch_streams(ctx, log_group_name, log_stream_name, out):
 
     df = pd.DataFrame(events)
     for i in ["timestamp", "ingestionTime"]:
-        df[i] = pd.to_datetime(df[i], unit="ms", errors="coerce").dt.tz_localize("UTC").dt.tz_convert("Asia/Tokyo")
+        df[i] = (
+            pd.to_datetime(df[i], unit="ms", errors="coerce")
+            .dt.tz_localize("UTC")
+            .dt.tz_convert("Asia/Tokyo")
+        )
     df.to_csv(out, index=False)
