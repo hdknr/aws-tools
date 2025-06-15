@@ -8,6 +8,7 @@ import pandas as pd
 from logging import getLogger
 from ..libs import cwl as cwl_lib
 from datetime import datetime
+from pathlib import Path
 
 logger = getLogger()
 
@@ -40,16 +41,18 @@ def list_groups(ctx, prefix):
 
 @cwl.command()
 @click.argument("log_group_name")
-@click.option("--stream_count", "-c", default=10)
+@click.option("--stream_count", "-c", default=50)
 @click.option("--today", "-t", is_flag=True)
+@click.option("--fetch", "-f", is_flag=True)
+@click.option("--out", "-o", default=None)
 @click.pass_context
-def list_streams(ctx, log_group_name, stream_count, today):
+def list_streams(ctx, log_group_name, stream_count, today, fetch, out):
     """ストリーム一覧"""
     client = cwl_lib.get_client()
 
     next_token = None
     log_stream_name_prefix = None
-    limit = 50
+    limit = stream_count
     order_by = "LastEventTime"
 
     params = {
@@ -74,7 +77,32 @@ def list_streams(ctx, log_group_name, stream_count, today):
     )
     if today:
         df = df[df["lastEventTimestamp"].dt.date == datetime.now().date()]
-    print(df[["logStreamName", "lastEventTimestamp"]].to_csv(index=False))
+
+    df = df[["logStreamName", "lastEventTimestamp"]]
+
+    def _do_fetch(row):
+        name = row["logStreamName"].split("/")[-1]
+        path = Path(out or "/tmp") / f"{name}.csv"
+        fetch_stream(log_group_name, row["logStreamName"], str(path))
+        row["path"] = path
+        return row
+
+    if fetch:
+        df = df.apply(_do_fetch, axis=1)
+
+    print(df.to_csv(index=False))
+
+
+def fetch_stream(log_group_name, log_stream_name, out):
+    events = cwl_lib.fech_stream_events(log_group_name, log_stream_name)
+    df = pd.DataFrame(events)
+    for i in ["timestamp", "ingestionTime"]:
+        df[i] = (
+            pd.to_datetime(df[i], unit="ms", errors="coerce")
+            .dt.tz_localize("UTC")
+            .dt.tz_convert("Asia/Tokyo")
+        )
+    df.to_csv(out, index=False)
 
 
 @cwl.command()
@@ -85,13 +113,4 @@ def list_streams(ctx, log_group_name, stream_count, today):
 def fetch_streams(ctx, log_group_name, log_stream_name, out):
     """ストリームダウンロード"""
     out = out or "/tmp/event.csv"
-    events = cwl_lib.fech_stream_events(log_group_name, log_stream_name)
-
-    df = pd.DataFrame(events)
-    for i in ["timestamp", "ingestionTime"]:
-        df[i] = (
-            pd.to_datetime(df[i], unit="ms", errors="coerce")
-            .dt.tz_localize("UTC")
-            .dt.tz_convert("Asia/Tokyo")
-        )
-    df.to_csv(out, index=False)
+    fetch_stream(log_group_name, log_stream_name, out)
