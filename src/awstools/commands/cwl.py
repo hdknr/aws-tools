@@ -4,11 +4,14 @@ cloudwatch logs
 
 import click
 import pandas as pd
+import os
 
 from logging import getLogger
 from ..libs import cwl as cwl_lib
 from datetime import datetime
 from pathlib import Path
+from functools import reduce
+import operator
 
 logger = getLogger()
 
@@ -114,3 +117,35 @@ def fetch_streams(ctx, log_group_name, log_stream_name, out):
     """ストリームダウンロード"""
     out = out or "/tmp/event.csv"
     fetch_stream(log_group_name, log_stream_name, out)
+
+
+@cwl.command()
+@click.argument("csv_file")
+@click.option("--exclude_file", "-x", default=None)
+@click.pass_context
+def report_error(ctx, csv_file, exclude_file):
+    """エラーレポート"""
+    exclude_file = exclude_file or os.environ.get("CWL_EXCLUDES", "")
+    if not exclude_file:
+        print("no excludes specified")
+        return
+
+    with open(exclude_file, "r") as err:
+        excludes = [i.rstrip() for i in err.readlines()]
+
+    if not excludes:
+        print("no excludes")
+        return
+
+    df = pd.read_csv(csv_file)
+
+    conditions = [
+        ~df["message"].str.contains(keyword, na=False) for keyword in excludes
+    ]
+
+    filtered_df = df[reduce(operator.and_, conditions)]
+    if filtered_df.shape[0] < 1:
+        print("no errors")
+        return
+
+    filtered_df.to_csv(f"{csv_file}.report.csv", index=False)
