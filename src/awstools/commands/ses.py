@@ -26,3 +26,13 @@ def desc_address(ctx, address):
     for email in address:
         res = ses_lib.get_suppressed_destination_details(email)
         print(json.dumps(res, indent=2, ensure_ascii=False, default=str))
+
+
+@ses.command()
+@click.argument("address", nargs=-1)
+@click.pass_context
+def remove_suppressed_address(ctx, address):
+    """サプレッションリストから削除"""
+    for email in address:
+        res = ses_lib.delete_email_from_suppression_list(email)
+        print(email, res)

@@ -110,3 +110,60 @@ def get_suppressed_destination_details(email_address, region_name=None):
     except Exception as e:
         logger.error(f"予期せぬエラーが発生しました: {e}")
         return None
+
+
+def delete_email_from_suppression_list(
+    email_address: str, region_name: str = None
+) -> bool:
+    """
+    SESv2のアカウントレベルのサプレッションリストから指定されたメールアドレスを削除します。
+
+    Args:
+        email_address (str): 削除したいメールアドレス。
+        region_name (str): SESを使用しているAWSリージョン名。
+
+    Returns:
+        bool: 削除が成功したか（または既に存在しなかったか）どうか。
+    """
+    try:
+        region_name = region_name or os.environ.get("AWS_REGION", "ap-northeast-1")
+        # SESv2クライアントの初期化
+        client = boto3.client("sesv2", region_name=region_name)
+
+        logger.info(f"'{email_address}' のサプレッションリストからの削除を試みます...")
+
+        # delete_suppressed_destinationの呼び出し
+        response = client.delete_suppressed_destination(EmailAddress=email_address)
+
+        # 成功すると、レスポンスボディは空（HTTP 200）ですが、
+        # Boto3のレスポンスにはメタデータが含まれます。
+        if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
+            logger.info(
+                f"✅ 削除リクエストが正常に受け付けられました。メールアドレス '{email_address}' はリストから削除されました。"
+            )
+            return True
+        else:
+            # 200以外の場合はエラーとして扱う
+            logger.info(
+                f"⚠️ 削除リクエストは正常に処理されませんでしたが、APIエラーはありませんでした: {response['ResponseMetadata']['HTTPStatusCode']}"
+            )
+            return False
+
+    except ClientError as e:
+        error_code = e.response["Error"]["Code"]
+
+        # NotFoundException: 削除対象のアドレスが既にリストにない場合
+        if error_code == "NotFoundException":
+            logger.error(
+                f"🔔 メールアドレス '{email_address}' はサプレッションリストに存在しませんでした。削除は不要です。"
+            )
+            return True
+        else:
+            # その他のAPIエラー（権限不足、不正な形式など）
+            logger.error(
+                f"❌ SES API呼び出し中にエラーが発生しました ({error_code}): {e}"
+            )
+            return False
+    except Exception as e:
+        logger.error(f"❌ 予期せぬエラーが発生しました: {e}")
+        return False
