@@ -25,3 +25,6 @@ main.add_command(ecs)
 main.add_command(cloudfront)
 main.add_command(cwl)
 main.add_command(ses)
+
+if __name__ == "__main__":
+    main()

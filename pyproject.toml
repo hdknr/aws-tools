@@ -14,8 +14,25 @@ dependencies = [
 [dependency-groups]
 dev = ["ruff>=0.5.6,<0.6"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[project.scripts]
+awstools = "awstools.commands:main"
+
+# Build
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src/awstools", 
+]
+[tool.hatch.build.targets.sdist]
+packages = ["src/awstools"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/awstools"]
+
 
 [tool.ruff]
 exclude = [
