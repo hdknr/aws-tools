@@ -6,6 +6,7 @@ from .rds import rds
 from .ecs import ecs
 from .cloudfront import cloudfront
 from .cwl import cwl
+from .ses import ses
 
 
 logger = getLogger()
@@ -23,3 +24,4 @@ main.add_command(rds)
 main.add_command(ecs)
 main.add_command(cloudfront)
 main.add_command(cwl)
+main.add_command(ses)
