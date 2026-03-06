@@ -11,71 +11,47 @@ def get_client():
     return client
 
 
-def _fetch_stream_events_recursive(
-    client,
-    log_group_name,
-    log_stream_name,
-    start_time_ms,
-    end_time_ms,
-    next_token=None,
-    accumulated_events=None,
-):
-    """
-    get_log_events API を再帰的に呼び出し、すべてのログイベントを取得するヘルパー関数。
-    """
-    if accumulated_events is None:
-        accumulated_events = []
+def _fetch_all_events(client, log_group_name, log_stream_name, start_time_ms, end_time_ms):
+    """get_log_events API をページネーションで呼び出し、すべてのログイベントを取得する。"""
+    all_events = []
+    next_token = None
 
-    params = {
-        "logGroupName": log_group_name,
-        "logStreamName": log_stream_name,
-        "startTime": start_time_ms,
-        "endTime": end_time_ms,
-        "limit": 10000,  # 1回の呼び出しで取得する最大イベント数
-        "startFromHead": True,  # 古いイベントから取得することで、nextTokenで順方向へ進む
-    }
-    if next_token:
-        params["nextToken"] = next_token
+    while True:
+        params = {
+            "logGroupName": log_group_name,
+            "logStreamName": log_stream_name,
+            "startTime": start_time_ms,
+            "endTime": end_time_ms,
+            "limit": 10000,
+            "startFromHead": True,
+        }
+        if next_token:
+            params["nextToken"] = next_token
 
-    response = client.get_log_events(**params)
+        response = client.get_log_events(**params)
+        all_events.extend(response["events"])
 
-    accumulated_events.extend(response["events"])
+        new_token = response.get("nextForwardToken")
+        if not new_token or new_token == next_token:
+            break
+        next_token = new_token
 
-    # nextForwardToken を使用して次のページをチェック
-    # nextForwardToken が存在し、かつ前回の next_token と異なる場合のみ再帰呼び出し
-    if "nextForwardToken" in response and response["nextForwardToken"] != next_token:
-        return _fetch_stream_events_recursive(
-            client,
-            log_group_name,
-            log_stream_name,
-            start_time_ms,
-            end_time_ms,
-            response["nextForwardToken"],
-            accumulated_events,
-        )
-    else:
-        return accumulated_events
+    return all_events
 
 
-def fech_stream_events(log_group_name, log_stream_name, start_time_ms=None, end_time_ms=None):
-    """
-    指定されたCloudWatch Logsのログストリームからログイベントをダウンロードします。
-    再帰的に全てのページを処理します。
-    """
+def fetch_stream_events(log_group_name, log_stream_name, start_time_ms=None, end_time_ms=None):
+    """指定されたCloudWatch Logsのログストリームからログイベントをダウンロードします。"""
     client = get_client()
 
-    # デフォルトの時間範囲を設定（過去24時間）
     if end_time_ms is None:
         end_time_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     if start_time_ms is None:
-        start_time_ms = end_time_ms - (24 * 60 * 60 * 1000)  # 24時間前
+        start_time_ms = end_time_ms - (24 * 60 * 60 * 1000)
 
     try:
-        # 再帰ヘルパー関数を呼び出してすべてのイベントを取得
-        all_events = _fetch_stream_events_recursive(client, log_group_name, log_stream_name, start_time_ms, end_time_ms)
-        return all_events
+        return _fetch_all_events(client, log_group_name, log_stream_name, start_time_ms, end_time_ms)
     except client.exceptions.ResourceNotFoundException:
         return []
     except Exception as e:
-        print(f"エラーが発生しました: {e}")
+        logger.error(f"エラーが発生しました: {e}")
         return []

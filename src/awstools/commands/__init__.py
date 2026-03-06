@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import click
-from logging import getLogger
 from .ec2 import ec2
 from .rds import rds
 from .ecs import ecs
@@ -9,13 +8,9 @@ from .cwl import cwl
 from .ses import ses
 
 
-logger = getLogger()
-
-
 @click.group()
-@click.option("--tf_output", "-to", default=None)
 @click.pass_context
-def main(ctx, tf_output):
+def main(ctx):
     ctx.ensure_object(dict)
 
 

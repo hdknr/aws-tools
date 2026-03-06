@@ -31,8 +31,8 @@ def rds(ctx):
 def start_rds(ctx, items):
     """ID/タグで指定されたインスタンスを起動する"""
 
-    ids = items
-    list(map(rds_lib.start, ids))
+    for i in items:
+        rds_lib.start(i)
 
 
 @rds.command()
@@ -41,8 +41,8 @@ def start_rds(ctx, items):
 def stop_rds(ctx, items):
     """ID/タグで指定されたインスタンスを停止する"""
 
-    ids = items
-    list(map(rds_lib.stop, ids))
+    for i in items:
+        rds_lib.stop(i)
 
 
 @rds.command()
@@ -51,8 +51,8 @@ def stop_rds(ctx, items):
 def start_cluster(ctx, items):
     """ID/タグで指定されたクラスターを起動する"""
 
-    ids = items
-    list(map(rds_lib.start_cluster, ids))
+    for i in items:
+        rds_lib.start_cluster(i)
 
 
 @rds.command()
@@ -61,5 +61,5 @@ def start_cluster(ctx, items):
 def stop_cluster(ctx, items):
     """ID/タグで指定されたクラスターを停止する"""
 
-    ids = items
-    list(map(rds_lib.stop_cluster, ids))
+    for i in items:
+        rds_lib.stop_cluster(i)

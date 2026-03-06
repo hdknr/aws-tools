@@ -11,7 +11,6 @@ import click
 
 from logging import getLogger
 from ..libs import cloudfront as cloudfront_lib
-import re
 
 logger = getLogger()
 
@@ -20,14 +19,6 @@ logger = getLogger()
 @click.pass_context
 def cloudfront(ctx):
     pass
-
-
-def get_params_from_item(item):
-    """
-    cluser/service/desired_count
-    """
-    ma = re.search(r"^([^/]+)/([^/]+)/([^/]+)$", item)
-    return ma and ma.groups()
 
 
 @cloudfront.command()

@@ -19,7 +19,7 @@ def get_dist(deploy, client=None):
     return item
 
 
-def get_dist_config(dist_id, client=None, dist=None):
+def get_dist_config(dist_id, client=None):
     client = client or get_client()
     # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudfront/client/get_distribution_config.html
     conf = client.get_distribution_config(Id=dist_id)

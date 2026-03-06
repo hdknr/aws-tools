@@ -42,7 +42,8 @@ def restart_instances(ctx, items):
     """ID/タグで指定されたインスタンスを再起動する"""
 
     ids = get_id_from_items(items)
-    list(map(ec2_lib.restart, ids))
+    for i in ids:
+        ec2_lib.restart(i)
 
 
 @ec2.command()
@@ -52,7 +53,8 @@ def start_instances(ctx, items):
     """ID/タグで指定されたインスタンスを起動する"""
 
     ids = get_id_from_items(items)
-    list(map(ec2_lib.start, ids))
+    for i in ids:
+        ec2_lib.start(i)
 
 
 @ec2.command()
@@ -62,4 +64,5 @@ def stop_instances(ctx, items):
     """ID/タグで指定されたインスタンスを停止する"""
 
     ids = get_id_from_items(items)
-    list(map(ec2_lib.stop, ids))
+    for i in ids:
+        ec2_lib.stop(i)

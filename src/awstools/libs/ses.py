@@ -1,7 +1,6 @@
 import logging
 import boto3
 from botocore.exceptions import ClientError
-from datetime import datetime, timezone, timedelta
 import os
 
 
@@ -38,7 +37,8 @@ def get_all_suppressed_destinations(region_name=None):
             # list_suppressed_destinationsの呼び出し
             if next_token:
                 response = client.list_suppressed_destinations(
-                    NextToken=next_token, PageSize=1000  # 最大値 (デフォルトも1000)
+                    NextToken=next_token,
+                    PageSize=1000,  # 最大値 (デフォルトも1000)
                 )
             else:
                 response = client.list_suppressed_destinations(PageSize=1000)
@@ -59,9 +59,7 @@ def get_all_suppressed_destinations(region_name=None):
                     }
                 )
 
-            logger.info(
-                f"  - 現在までに {len(suppressed_emails)} 件の宛先を取得しました。"
-            )
+            logger.info(f"  - 現在までに {len(suppressed_emails)} 件の宛先を取得しました。")
 
             # 次のページがあるか確認
             next_token = response.get("NextToken")
@@ -100,9 +98,7 @@ def get_suppressed_destination_details(email_address, region_name=None):
     except ClientError as e:
         # NotFoundException はリストに存在しないことを意味します
         if e.response["Error"]["Code"] == "NotFoundException":
-            logger.error(
-                f"メールアドレス '{email_address}' はサプレッションリストに存在しません。"
-            )
+            logger.error(f"メールアドレス '{email_address}' はサプレッションリストに存在しません。")
             return None
         else:
             logger.error(f"SES API呼び出し中にエラーが発生しました: {e}")
@@ -112,9 +108,7 @@ def get_suppressed_destination_details(email_address, region_name=None):
         return None
 
 
-def delete_email_from_suppression_list(
-    email_address: str, region_name: str = None
-) -> bool:
+def delete_email_from_suppression_list(email_address: str, region_name: str = None) -> bool:
     """
     SESv2のアカウントレベルのサプレッションリストから指定されたメールアドレスを削除します。
 
@@ -160,9 +154,7 @@ def delete_email_from_suppression_list(
             return True
         else:
             # その他のAPIエラー（権限不足、不正な形式など）
-            logger.error(
-                f"❌ SES API呼び出し中にエラーが発生しました ({error_code}): {e}"
-            )
+            logger.error(f"❌ SES API呼び出し中にエラーが発生しました ({error_code}): {e}")
             return False
     except Exception as e:
         logger.error(f"❌ 予期せぬエラーが発生しました: {e}")

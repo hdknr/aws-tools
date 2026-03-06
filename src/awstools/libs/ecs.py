@@ -20,12 +20,7 @@ def update_desired_count(cluster, service, desired_count, client=None):
         service=service,
         desiredCount=int(desired_count),
     )
-    try:
-        response = client.update_service(**params)
-        message = "ECSタスク数更新:" + str(params)
-        logger.info(f"update_desired_count: {message}")
-    except Exception as e:
-        logger.error(f"update_desired_count: {e}")
-        pass
-
+    response = client.update_service(**params)
+    message = "ECSタスク数更新:" + str(params)
+    logger.info(f"update_desired_count: {message}")
     return response
