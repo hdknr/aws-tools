@@ -28,16 +28,18 @@ def cwl(ctx):
 def list_groups(ctx, prefix):
     """ロググループ一覧"""
     client = cwl_lib.get_client()
-    limit = 50
-    next_token = None
-    #
-    params = {"limit": limit}
+    params = {"limit": 50}
     if prefix:
         params["logGroupNamePrefix"] = prefix
-    if next_token:
+
+    log_groups = []
+    while True:
+        response = client.describe_log_groups(**params)
+        log_groups.extend(response["logGroups"])
+        next_token = response.get("nextToken")
+        if not next_token:
+            break
         params["nextToken"] = next_token
-    response = client.describe_log_groups(**params)
-    log_groups = response["logGroups"]
 
     print(pd.DataFrame(log_groups)[["logGroupName"]].to_csv(index=False))
 
@@ -53,21 +55,12 @@ def list_streams(ctx, log_group_name, stream_count, today, fetch, out):
     """ストリーム一覧"""
     client = cwl_lib.get_client()
 
-    next_token = None
-    log_stream_name_prefix = None
-    limit = stream_count
-    order_by = "LastEventTime"
-
     params = {
         "logGroupName": log_group_name,
-        "limit": limit,
-        "orderBy": order_by,
-        "descending": True,  # 最新のログストリームから取得する場合に True に設定
+        "limit": stream_count,
+        "orderBy": "LastEventTime",
+        "descending": True,
     }
-    if log_stream_name_prefix:
-        params["logStreamNamePrefix"] = log_stream_name_prefix
-    if next_token:
-        params["nextToken"] = next_token
 
     response = client.describe_log_streams(**params)
 
@@ -97,14 +90,10 @@ def list_streams(ctx, log_group_name, stream_count, today, fetch, out):
 
 
 def fetch_stream(log_group_name, log_stream_name, out):
-    events = cwl_lib.fech_stream_events(log_group_name, log_stream_name)
+    events = cwl_lib.fetch_stream_events(log_group_name, log_stream_name)
     df = pd.DataFrame(events)
     for i in ["timestamp", "ingestionTime"]:
-        df[i] = (
-            pd.to_datetime(df[i], unit="ms", errors="coerce")
-            .dt.tz_localize("UTC")
-            .dt.tz_convert("Asia/Tokyo")
-        )
+        df[i] = pd.to_datetime(df[i], unit="ms", errors="coerce").dt.tz_localize("UTC").dt.tz_convert("Asia/Tokyo")
     df.to_csv(out, index=False)
 
 
@@ -139,9 +128,7 @@ def report_error(ctx, csv_file, exclude_file):
 
     df = pd.read_csv(csv_file)
 
-    conditions = [
-        ~df["message"].str.contains(keyword, na=False) for keyword in excludes
-    ]
+    conditions = [~df["message"].str.contains(keyword, na=False) for keyword in excludes]
 
     filtered_df = df[reduce(operator.and_, conditions)]
     if filtered_df.shape[0] < 1:

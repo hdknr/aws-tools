@@ -50,7 +50,7 @@ def force_restart_instance_status(instance_id):
         logger.error("force_restart_instance_status: " + str(instance_status))
         resource = boto3.resource("ec2")
         instance = resource.Instance(instance_id)
-        instance.stop(force=True)
+        instance.stop(Force=True)
         instance.wait_until_stopped()
         instance.start()
 
@@ -60,7 +60,7 @@ def restart(instance_id, obj=None, force=False, dry_run=False):
     state:
     - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/instance/state.html
     """
-    logger.info(f"restaring {instance_id}")
+    logger.info(f"restarting {instance_id}")
 
     resource = boto3.resource("ec2")
     instance = obj or resource.Instance(instance_id)
@@ -123,5 +123,5 @@ def get_ids_from_response(response):
 
 def restart_instances_all(response, force=False, dry_run=False):
     """再起動"""
-    instances = chain.from_iterable(map(lambda i: i["Instances"], response["Reservations"]))
-    return list(map(lambda i: restart(i["InstanceId"], force=force, dry_run=dry_run), instances))
+    instances = get_instances_from_response(response)
+    return [restart(i["InstanceId"], force=force, dry_run=dry_run) for i in instances]

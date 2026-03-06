@@ -3,7 +3,7 @@
 Required actions:
 
 "Action": [
-      ""ecs:UpdateService",
+      "ecs:UpdateService",
       ]
 
 """
@@ -25,7 +25,7 @@ def ecs(ctx):
 
 def get_params_from_item(item):
     """
-    cluser/service/desired_count
+    cluster/service/desired_count
     """
     ma = re.search(r"^([^/]+)/([^/]+)/([^/]+)$", item)
     return ma and ma.groups()
